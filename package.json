@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:cf": "wrangler dev",
     "server": "node server.mjs",
     "start": "node server.mjs & vite",
     "test": "node test-collab.mjs",
+    "test:cf-config": "node test-cf-config.mjs",
     "lint": "biome lint .",
     "build": "tsc && vite build",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -17,7 +21,8 @@
     "@playwright/test": "^1.59.1",
     "@types/ws": "^8.18.1",
     "typescript": "~6.0.2",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "wrangler": "^4.85.0"
   },
   "dependencies": {
     "@codemirror/state": "^6.6.0",

@@ -29,6 +29,7 @@
   "files": {
     "includes": [
       "src/**",
+      "!src/worker-configuration.d.ts",
       "tests/**",
       "*.ts",
       "*.mjs"
