@@ -14,7 +14,15 @@ declare global {
 const doc = new Y.Doc();
 const ytext = doc.getText('codemirror');
 
-const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:1234';
+function resolveWsUrl(): string {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  if (import.meta.env.DEV) return 'ws://localhost:1234';
+
+  const { protocol, host } = window.location;
+  return `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}`;
+}
+
+const wsUrl = resolveWsUrl();
 
 const provider = new WebsocketProvider(
   wsUrl,

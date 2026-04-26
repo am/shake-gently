@@ -18,7 +18,7 @@ assert.match(workerSource, /MSG_SYNC\s*=\s*0/, 'Worker should use y-websocket sy
 assert.match(workerSource, /MSG_AWARENESS\s*=\s*1/, 'Worker should use y-websocket awareness message type 1');
 assert.match(workerSource, /readSyncMessage/, 'Worker should read Yjs sync messages');
 assert.match(workerSource, /applyAwarenessUpdate/, 'Worker should apply awareness updates');
-assert.match(workerSource, /acceptWebSocket|server\.accept\(\)/, 'Worker should explicitly accept WebSocket upgrades');
+assert.match(workerSource, /acceptWebSocket/, 'Worker should use the Hibernatable WebSocket API');
 assert.match(workerSource, /getByName\(roomName\)/, 'Worker should route each room path to a named Durable Object');
 assert.match(workerSource, /Upgrade'\)\s*!==\s*'websocket'/, 'Worker should guard non-WebSocket room requests');
 
@@ -32,6 +32,9 @@ assert.equal(wranglerJson.durable_objects.bindings[0].name, 'ROOMS', 'Wrangler s
 assert.equal(wranglerJson.durable_objects.bindings[0].class_name, 'RoomDurableObject', 'Wrangler should bind RoomDurableObject');
 assert.deepEqual(wranglerJson.migrations[0].new_sqlite_classes, ['RoomDurableObject'], 'Wrangler should use SQLite Durable Object migrations');
 assert.equal(wranglerJson.observability.enabled, true, 'Wrangler should enable observability');
+
+const mainSource = readFileSync(new URL('./src/main.ts', import.meta.url), 'utf8');
+assert.match(mainSource, /window\.location/, 'Client should derive WS URL from page origin for deployed environments');
 
 assert.equal(packageJson.scripts['test:cf-config'], 'node test-cf-config.mjs', 'package.json should expose test:cf-config');
 assert.equal(packageJson.scripts['dev:cf'], 'wrangler dev', 'package.json should expose local Cloudflare dev');

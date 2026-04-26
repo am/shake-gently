@@ -138,7 +138,7 @@ npm run deploy          # Deploy Worker + assets to Cloudflare
 npx playwright test     # E2E tests (starts its own Vite + WS server)
 ```
 
-Open `http://localhost:5173` in multiple tabs to collaborate with the Node workflow. For Cloudflare local dev, run `npm run build` first so Wrangler can serve `./dist`, then open the Wrangler URL. The app defaults to `ws://localhost:1234`; set `VITE_WS_URL` to the deployed Worker origin when building a client that should connect to Cloudflare.
+Open `http://localhost:5173` in multiple tabs to collaborate with the Node workflow. For Cloudflare local dev, run `npm run build` first so Wrangler can serve `./dist`, then open the Wrangler URL. On localhost the client connects to `ws://localhost:1234` (the Node relay); on any other origin it derives the WebSocket URL from the page host automatically, so no build-time config is needed for Cloudflare deployments. Set `VITE_WS_URL` to override this if needed.
 
 ## CI / Deploy
 

@@ -13,11 +13,6 @@ interface Env {
   ROOMS: DurableObjectNamespace<RoomDurableObject>;
 }
 
-type Peer = {
-  socket: WebSocket;
-  clientIds: Set<number>;
-};
-
 type AwarenessChanges = {
   added: number[];
   updated: number[];
@@ -27,7 +22,7 @@ type AwarenessChanges = {
 export class RoomDurableObject extends DurableObject<Env> {
   private readonly doc = new Y.Doc();
   private readonly awareness = new awarenessProtocol.Awareness(this.doc);
-  private readonly peers = new Map<WebSocket, Peer>();
+  private readonly clientIds = new Map<WebSocket, Set<number>>();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -44,50 +39,16 @@ export class RoomDurableObject extends DurableObject<Env> {
 
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
-    server.accept();
+    this.ctx.acceptWebSocket(server);
+    this.clientIds.set(server, new Set());
 
-    this.addPeer(server);
+    this.sendSyncStep1(server);
+    this.sendAwarenessSnapshot(server);
+
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private addPeer(socket: WebSocket) {
-    this.peers.set(socket, { socket, clientIds: new Set() });
-
-    this.sendSyncStep1(socket);
-    this.sendAwarenessSnapshot(socket);
-
-    socket.addEventListener('message', (event) => {
-      this.handleMessage(socket, event.data);
-    });
-    socket.addEventListener('close', () => {
-      this.removePeer(socket);
-    });
-    socket.addEventListener('error', () => {
-      this.removePeer(socket);
-    });
-  }
-
-  private sendSyncStep1(socket: WebSocket) {
-    const encoder = encoding.createEncoder();
-    encoding.writeVarUint(encoder, MSG_SYNC);
-    syncProtocol.writeSyncStep1(encoder, this.doc);
-    socket.send(encoding.toUint8Array(encoder));
-  }
-
-  private sendAwarenessSnapshot(socket: WebSocket) {
-    const states = this.awareness.getStates();
-    if (states.size === 0) return;
-
-    const encoder = encoding.createEncoder();
-    encoding.writeVarUint(encoder, MSG_AWARENESS);
-    encoding.writeVarUint8Array(
-      encoder,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, Array.from(states.keys())),
-    );
-    socket.send(encoding.toUint8Array(encoder));
-  }
-
-  private handleMessage(socket: WebSocket, data: string | ArrayBuffer) {
+  webSocketMessage(socket: WebSocket, data: string | ArrayBuffer) {
     if (typeof data === 'string') return;
 
     const message = new Uint8Array(data);
@@ -113,12 +74,40 @@ export class RoomDurableObject extends DurableObject<Env> {
     }
   }
 
+  webSocketClose(socket: WebSocket) {
+    this.removePeer(socket);
+  }
+
+  webSocketError(socket: WebSocket) {
+    this.removePeer(socket);
+  }
+
+  private sendSyncStep1(socket: WebSocket) {
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, MSG_SYNC);
+    syncProtocol.writeSyncStep1(encoder, this.doc);
+    socket.send(encoding.toUint8Array(encoder));
+  }
+
+  private sendAwarenessSnapshot(socket: WebSocket) {
+    const states = this.awareness.getStates();
+    if (states.size === 0) return;
+
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, MSG_AWARENESS);
+    encoding.writeVarUint8Array(
+      encoder,
+      awarenessProtocol.encodeAwarenessUpdate(this.awareness, Array.from(states.keys())),
+    );
+    socket.send(encoding.toUint8Array(encoder));
+  }
+
   private broadcast(message: Uint8Array, except: WebSocket) {
-    this.peers.forEach((peer) => {
-      if (peer.socket !== except && peer.socket.readyState === WebSocket.OPEN) {
-        peer.socket.send(message);
+    for (const ws of this.ctx.getWebSockets()) {
+      if (ws !== except) {
+        ws.send(message);
       }
-    });
+    }
   }
 
   private broadcastAwareness(
@@ -134,29 +123,29 @@ export class RoomDurableObject extends DurableObject<Env> {
     );
     const message = encoding.toUint8Array(encoder);
 
-    this.peers.forEach((_, socket) => {
-      if (socket !== origin && socket.readyState === WebSocket.OPEN) {
-        socket.send(message);
+    for (const ws of this.ctx.getWebSockets()) {
+      if (ws !== origin) {
+        ws.send(message);
       }
-    });
+    }
 
     if (origin instanceof WebSocket) {
-      const peer = this.peers.get(origin);
-      if (peer) {
-        for (const clientId of changes.added) peer.clientIds.add(clientId);
-        for (const clientId of changes.updated) peer.clientIds.add(clientId);
+      const ids = this.clientIds.get(origin);
+      if (ids) {
+        for (const id of changes.added) ids.add(id);
+        for (const id of changes.updated) ids.add(id);
       }
     }
   }
 
   private removePeer(socket: WebSocket) {
-    const peer = this.peers.get(socket);
-    this.peers.delete(socket);
+    const ids = this.clientIds.get(socket);
+    this.clientIds.delete(socket);
 
-    if (peer && peer.clientIds.size > 0) {
+    if (ids && ids.size > 0) {
       awarenessProtocol.removeAwarenessStates(
         this.awareness,
-        Array.from(peer.clientIds),
+        Array.from(ids),
         null,
       );
     }
