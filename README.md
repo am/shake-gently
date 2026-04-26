@@ -139,3 +139,12 @@ npx playwright test     # E2E tests (starts its own Vite + WS server)
 ```
 
 Open `http://localhost:5173` in multiple tabs to collaborate with the Node workflow. For Cloudflare local dev, run `npm run build` first so Wrangler can serve `./dist`, then open the Wrangler URL. The app defaults to `ws://localhost:1234`; set `VITE_WS_URL` to the deployed Worker origin when building a client that should connect to Cloudflare.
+
+## CI / Deploy
+
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push and PR to `master`:
+
+1. **CI job** -- install, lint, build, config invariant tests, Node integration tests, Playwright E2E.
+2. **Deploy job** -- runs only on push to `master` after CI passes. Calls `wrangler deploy` via `cloudflare/wrangler-action`.
+
+Requires a `CLOUDFLARE_API_TOKEN` repository secret (Settings > Secrets and variables > Actions). Generate one at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) with the **Edit Cloudflare Workers** template.
