@@ -14,7 +14,7 @@
 >
 > Tristan Tzara — (1896-1963)
 
-A collaborative text editor where every user's keystrokes glow in a different color. Multiple browsers connect to a shared document over WebSockets; each participant is assigned a unique neon shade, and their text lights up accordingly in real time.
+A collaborative text editor where every user's can write using it's own color. Multiple users can connect to a shared document over WebSockets; each participant is assigned a unique color shade, and their text is shared in real time.
 
 Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a minimal Node WebSocket relay. The UI is dark-on-black with a glassmorphism editor surface, neon text rendering, and live presence indicators.
 
