@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { WebSocketServer } from 'ws';
+import type { WebSocketServer } from 'ws';
 import { startIsolatedServer, stopServer } from './helpers/ws-server';
 import { TEST_WS_PORT, APP_URL } from './helpers/constants';
 

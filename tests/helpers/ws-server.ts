@@ -112,7 +112,7 @@ export function startIsolatedServer(port: number): Promise<WebSocketServer> {
 
 export async function stopServer(wss: WebSocketServer): Promise<void> {
   await new Promise<void>((resolve) => {
-    wss.clients.forEach((ws) => ws.close());
+    wss.clients.forEach((ws) => { ws.close(); });
     wss.close(() => resolve());
   });
 }

@@ -15,7 +15,7 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
 const WS_URL = 'ws://localhost:1234';
-const ROOM = 'test-room-' + Date.now();
+const ROOM = `test-room-${Date.now()}`;
 const USER_COUNT = 3;
 
 const SHADES = [
@@ -201,7 +201,6 @@ async function main() {
     const expectedColor = u.identity.color;
 
     const delta = u.ytext.toDelta();
-    let pos = 0;
     let found = false;
 
     for (const op of delta) {
@@ -215,7 +214,6 @@ async function main() {
           );
           break;
         }
-        pos += op.insert.length;
       }
     }
 

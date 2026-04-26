@@ -111,6 +111,7 @@ graph TD
 | [CodeMirror 6](https://codemirror.net/)                       | Text editor (state, view, extensions)                    |
 | [ws](https://github.com/websockets/ws)                        | Node WebSocket server                                    |
 | [Vite](https://vite.dev/)                                     | Dev server and bundler                                   |
+| [Biome](https://biomejs.dev/)                                 | Linter (configured in `biome.json`)                      |
 
 ## Running
 
@@ -122,6 +123,7 @@ npm run start     # WS server (background) + Vite dev server
 npm run server    # just the WS relay on :1234
 npm run dev       # just Vite
 
+npm run lint            # Biome linter across the whole project
 npm test                # Node integration test (needs server on :1234)
 npx playwright test     # E2E tests (starts its own Vite + WS server)
 ```
