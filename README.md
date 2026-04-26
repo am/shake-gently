@@ -1,13 +1,5 @@
 # Shake gently
 
-A collaborative text editor where every user's keystrokes glow in a different color. Multiple browsers connect to a shared document over WebSockets; each participant is assigned a unique neon shade, and their text lights up accordingly in real time.
-
-Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a minimal Node WebSocket relay. The UI is dark-on-black with a glassmorphism editor surface, neon text rendering, and live presence indicators.
-
-## Name
-
-The name comes from Tristan Tzara's Dadaist instruction poem:
-
 > To Make A Dadaist Poem
 > Take a newspaper.
 > Take some scissors.
@@ -20,8 +12,11 @@ The name comes from Tristan Tzara's Dadaist instruction poem:
 > The poem will resemble you.
 > And there you are–an infinitely original author of charming sensibility, even though unappreciated by the vulgar herd.
 >
-> Tristan Tzara
-> (1896-1963)
+> Tristan Tzara — (1896-1963)
+
+A collaborative text editor where every user's keystrokes glow in a different color. Multiple browsers connect to a shared document over WebSockets; each participant is assigned a unique neon shade, and their text lights up accordingly in real time.
+
+Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a minimal Node WebSocket relay. The UI is dark-on-black with a glassmorphism editor surface, neon text rendering, and live presence indicators.
 
 ## What it does
 
