@@ -33,8 +33,9 @@ jobs:
 
       - name: Node integration tests
         run: |
-          node server.mjs &
-          sleep 1
+          mkdir -p dist
+          npx wrangler dev &
+          sleep 3
           npm test
           kill %1
 

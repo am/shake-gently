@@ -16,7 +16,7 @@ const ytext = doc.getText('codemirror');
 
 function resolveWsUrl(): string {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
-  if (import.meta.env.DEV) return 'ws://localhost:1234';
+  if (import.meta.env.DEV) return 'ws://localhost:8787';
 
   const { protocol, host } = window.location;
   return `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}`;

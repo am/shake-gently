@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:cf": "wrangler dev",
-    "server": "node server.mjs",
-    "start": "node server.mjs & vite",
+    "server": "mkdir -p dist && wrangler dev",
+    "start": "mkdir -p dist && wrangler dev & vite",
     "test": "node test-collab.mjs",
     "test:cf-config": "node test-cf-config.mjs",
     "lint": "biome lint .",

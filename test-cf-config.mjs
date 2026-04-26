@@ -37,7 +37,7 @@ const mainSource = readFileSync(new URL('./src/main.ts', import.meta.url), 'utf8
 assert.match(mainSource, /window\.location/, 'Client should derive WS URL from page origin for deployed environments');
 
 assert.equal(packageJson.scripts['test:cf-config'], 'node test-cf-config.mjs', 'package.json should expose test:cf-config');
-assert.equal(packageJson.scripts['dev:cf'], 'wrangler dev', 'package.json should expose local Cloudflare dev');
+assert.match(packageJson.scripts.server, /wrangler dev/, 'server script should use wrangler dev');
 assert.equal(packageJson.scripts.deploy, 'wrangler deploy', 'package.json should expose deploy');
 assert.equal(packageJson.scripts['deploy:dry-run'], 'wrangler deploy --dry-run', 'package.json should expose dry-run deploy');
 assert.ok(packageJson.devDependencies?.wrangler, 'package.json should include wrangler as a devDependency');

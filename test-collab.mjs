@@ -1,7 +1,7 @@
 /**
  * Integration test: verifies the 5 collaboration conditions with 3 simulated users.
  *
- * Prerequisites: server.mjs must be running on ws://localhost:1234
+ * Prerequisites: wrangler dev must be running on ws://localhost:8787
  *
  * Conditions tested:
  *   1. Multiple users connect to a shared input field
@@ -14,23 +14,23 @@
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-const WS_URL = 'ws://localhost:1234';
-const ROOM = `test-room-${Date.now()}`;
+const WS_URL = 'ws://localhost:8787';
+const ROOM = `shake-gently-room/test-${Date.now()}`;
 const USER_COUNT = 3;
 
 const SHADES = [
-  { name: 'Moonstone',     color: '#90b8f8', glow: '#5080d0' },
-  { name: 'Pearl Dust',    color: '#f090c0', glow: '#d06090' },
-  { name: 'Frost Whisper', color: '#70d0f0', glow: '#40a0d0' },
-  { name: 'Silver Dawn',   color: '#c0c0c0', glow: '#808080' },
-  { name: 'Ghost Orchid',  color: '#c090f0', glow: '#9060d0' },
-  { name: 'Bone Light',    color: '#f0d080', glow: '#c0a050' },
-  { name: 'Selenite',      color: '#80e0e0', glow: '#50b0b0' },
-  { name: 'Chalk Ember',   color: '#f0a870', glow: '#d08040' },
-  { name: 'Vapor',         color: '#a0a8f0', glow: '#7078d0' },
-  { name: 'Pale Flame',    color: '#f08870', glow: '#d06048' },
-  { name: 'White Sage',    color: '#80e0a0', glow: '#50b070' },
-  { name: 'Rime',          color: '#68c8f0', glow: '#4098c8' },
+  { name: 'Moonstone',     color: '#90b8f8' },
+  { name: 'Pearl Dust',    color: '#f090c0' },
+  { name: 'Frost Whisper', color: '#70d0f0' },
+  { name: 'Silver Dawn',   color: '#c0c0c0' },
+  { name: 'Ghost Orchid',  color: '#c090f0' },
+  { name: 'Bone Light',    color: '#f0d080' },
+  { name: 'Selenite',      color: '#80e0e0' },
+  { name: 'Chalk Ember',   color: '#f0a870' },
+  { name: 'Vapor',         color: '#a0a8f0' },
+  { name: 'Pale Flame',    color: '#f08870' },
+  { name: 'White Sage',    color: '#80e0a0' },
+  { name: 'Rime',          color: '#68c8f0' },
 ];
 
 function takenNames(awareness) {
@@ -53,7 +53,7 @@ function pickAvailable(awareness) {
 
 function createUserIdentity(awareness) {
   const shade = pickAvailable(awareness);
-  return { name: shade.name, color: shade.color, colorLight: shade.glow };
+  return { name: shade.name, color: shade.color };
 }
 
 function setupCollisionGuard(awareness, onReassign) {
@@ -73,7 +73,7 @@ function setupCollisionGuard(awareness, onReassign) {
     if (dominated) {
       resolving = true;
       const shade = pickAvailable(awareness);
-      const identity = { name: shade.name, color: shade.color, colorLight: shade.glow };
+      const identity = { name: shade.name, color: shade.color };
       awareness.setLocalStateField('user', identity);
       onReassign(identity);
       resolving = false;
