@@ -50,6 +50,21 @@ function updateStatus(connected: boolean) {
 
 provider.on('status', ({ status }: { status: string }) => {
   updateStatus(status === 'connected');
+  if (status === 'connected') {
+    // Re-announce identity so the server accepts it (awareness clock must advance
+    // past the stale value the server kept from the previous connection).
+    provider.awareness.setLocalStateField('user', user);
+  } else {
+    // Drop cached clocks for remote clients so that when we reconnect and the
+    // server sends its awareness snapshot, applyAwarenessUpdate sees currClock=0
+    // and accepts the update instead of ignoring it as a duplicate clock.
+    const localId = doc.clientID;
+    for (const clientId of provider.awareness.meta.keys()) {
+      if (clientId !== localId) {
+        provider.awareness.meta.delete(clientId);
+      }
+    }
+  }
 });
 
 createEditor(editorContainer, ytext, provider.awareness);
