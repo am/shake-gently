@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: './tests',
   snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
   timeout: 30_000,
+  workers: 1,
   use: {
     browserName: 'chromium',
     viewport: { width: 960, height: 720 },

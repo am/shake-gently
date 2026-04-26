@@ -77,3 +77,5 @@ function renderPresence() {
 
 provider.awareness.on('change', renderPresence);
 renderPresence();
+
+(window as any).__yProvider = provider;
