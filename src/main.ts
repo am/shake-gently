@@ -8,8 +8,10 @@ import './style.css';
 const doc = new Y.Doc();
 const ytext = doc.getText('codemirror');
 
+const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:1234';
+
 const provider = new WebsocketProvider(
-  'ws://localhost:1234',
+  wsUrl,
   'multinput-room',
   doc,
   { disableBc: true },

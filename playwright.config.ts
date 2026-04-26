@@ -1,0 +1,22 @@
+import { defineConfig } from '@playwright/test';
+
+const TEST_WS_PORT = 4321;
+
+export default defineConfig({
+  testDir: './tests',
+  snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
+  timeout: 30_000,
+  use: {
+    browserName: 'chromium',
+    viewport: { width: 960, height: 720 },
+    deviceScaleFactor: 2,
+  },
+  webServer: {
+    command: `npx vite --port 5199 --strictPort`,
+    port: 5199,
+    reuseExistingServer: false,
+    env: {
+      VITE_WS_URL: `ws://localhost:${TEST_WS_PORT}`,
+    },
+  },
+});

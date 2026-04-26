@@ -72,7 +72,7 @@ body {
 main {
   flex: 1;
   min-height: 0;
-  padding: 0 0 16px;
+  padding-bottom: 16px;
 }
 
 #editor-wrap {
@@ -82,25 +82,25 @@ main {
   overflow: hidden;
 }
 
-/* noise layer */
-#editor-wrap::before {
+#editor-wrap::before,
+#editor-wrap::after {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
+}
+
+/* noise layer */
+#editor-wrap::before {
   filter: url(#noise);
   opacity: 0.04;
-  pointer-events: none;
   z-index: 1;
 }
 
 /* glass border glow */
 #editor-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 0;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  pointer-events: none;
   z-index: 2;
 }
 
@@ -130,7 +130,6 @@ main {
   font-weight: 700;
   font-size: 24px;
   line-height: 1.5;
-  letter-spacing: 0;
   color: #f0f0f0;
   text-shadow:
     0 0 8px rgba(255, 255, 255, 0.5),
@@ -144,8 +143,6 @@ main {
 }
 
 #editor .cm-cursor,
-#editor .cm-cursor-primary,
-#editor .cm-cursor-secondary,
 #editor .cm-dropCursor {
   border-left: 2px solid #fff !important;
   border-right: none !important;
@@ -156,10 +153,6 @@ main {
 }
 
 #editor .cm-activeLine {
-  background: transparent !important;
-}
-
-#editor .cm-activeLineGutter {
   background: transparent !important;
 }
 
@@ -190,7 +183,6 @@ main {
   margin-right: -1px;
   position: relative;
   border-radius: 2px;
-  opacity: 1;
   pointer-events: auto;
   cursor: default;
 }
@@ -218,7 +210,6 @@ main {
   z-index: 101;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
-  transition-delay: 0s;
 }
 
 #editor .cm-ySelectionCaret:hover > .cm-ySelectionInfo {
