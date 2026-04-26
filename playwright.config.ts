@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
+import { TEST_WS_PORT } from './tests/helpers/constants';
 
-const TEST_WS_PORT = 4321;
 
 export default defineConfig({
   testDir: './tests',

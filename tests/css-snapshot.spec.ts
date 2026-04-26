@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { WebSocketServer } from 'ws';
 import { startIsolatedServer, stopServer } from './helpers/ws-server';
-
-const TEST_WS_PORT = 4321;
+import { TEST_WS_PORT, APP_URL } from './helpers/constants';
 
 // SVG feTurbulence noise + font sub-pixel rendering create ~1-2% pixel
 // variance between browser launches. Threshold set above that noise floor
@@ -29,9 +28,11 @@ test.describe('CSS visual regression', () => {
       };
     });
 
-    await page.goto('http://localhost:5199');
+    await page.goto(APP_URL);
     await page.waitForSelector('.status-dot.connected', { timeout: 10_000 });
     await page.waitForSelector('#editor .cm-editor', { timeout: 5_000 });
+    // Settle time for font loading and SVG noise filter rendering;
+    // no stable visual-ready signal exists for these.
     await page.waitForTimeout(1000);
   });
 

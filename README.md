@@ -8,31 +8,20 @@ Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a 
 
 The name comes from Tristan Tzara's Dadaist instruction poem:
 
-> Tristan Tzara
->
-> (1896-1963)
->
 > To Make A Dadaist Poem
->
 > Take a newspaper.
->
 > Take some scissors.
->
 > Choose from this paper an article the length you want to make your poem.
->
 > Cut out the article.
->
 > Next carefully cut out each of the words that make up this article and put them all in a bag.
->
 > Shake gently.
->
 > Next take out each cutting one after the other.
->
 > Copy conscientiously in the order in which they left the bag.
->
 > The poem will resemble you.
->
 > And there you are–an infinitely original author of charming sensibility, even though unappreciated by the vulgar herd.
+>
+> Tristan Tzara
+> (1896-1963)
 
 ## What it does
 
@@ -55,7 +44,10 @@ src/
   colors.ts         Y.Text formatting on insert + CodeMirror mark decorations
   style.css         All styling (glassmorphism surface, neon text, cursors, presence)
 tests/
-  helpers/ws-server.ts   In-process WS server for Playwright tests
+  helpers/
+    ws-server.ts         In-process WS server for Playwright tests
+    constants.ts         Shared test ports and URLs
+    global.d.ts          Window type augmentation for test evaluate() calls
 ```
 
 ### Data flow

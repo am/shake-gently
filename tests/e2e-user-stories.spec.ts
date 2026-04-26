@@ -1,15 +1,10 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import { WebSocketServer } from 'ws';
 import { startIsolatedServer, stopServer } from './helpers/ws-server';
+import { TEST_WS_PORT, APP_URL } from './helpers/constants';
+import { SHADES } from '../src/awareness';
 
-const TEST_WS_PORT = 4321;
-const APP_URL = 'http://localhost:5199';
-
-const SHADE_NAMES = [
-  'Moonstone', 'Pearl Dust', 'Frost Whisper', 'Silver Dawn',
-  'Ghost Orchid', 'Bone Light', 'Selenite', 'Chalk Ember',
-  'Vapor', 'Pale Flame', 'White Sage', 'Rime',
-];
+const SHADE_NAMES = SHADES.map((s) => s.name);
 
 let wss: WebSocketServer;
 
@@ -70,14 +65,9 @@ test.describe('US2: Solo user types and text is colored', () => {
 
     await expect(content).toContainText('hello world');
 
-    // Wait for the color-format cycle (setTimeout + requestAnimationFrame)
-    await page.waitForTimeout(500);
-
-    const hasColorStyle = await content.evaluate((el) => {
-      const spans = el.querySelectorAll('[style*="color"]');
-      return spans.length > 0;
-    });
-    expect(hasColorStyle).toBe(true);
+    await expect.poll(async () => {
+      return content.evaluate((el) => el.querySelectorAll('[style*="color"]').length > 0);
+    }, { timeout: 5_000 }).toBe(true);
 
     await page.close();
   });
@@ -127,8 +117,8 @@ test.describe('US4: Real-time sync between two users', () => {
 
     // Compare actual document text via Yjs, not DOM textContent
     // (DOM includes remote cursor label overlay elements)
-    const textA = await pageA.evaluate(() => (window as any).__yProvider.doc.getText('codemirror').toString());
-    const textB = await pageB.evaluate(() => (window as any).__yProvider.doc.getText('codemirror').toString());
+    const textA = await pageA.evaluate(() => window.__yProvider!.doc.getText('codemirror').toString());
+    const textB = await pageB.evaluate(() => window.__yProvider!.doc.getText('codemirror').toString());
     expect(textA).toBe(textB);
 
     await pageA.close();
@@ -176,7 +166,7 @@ test.describe('US6: Identity collision resolution', () => {
 
     // Force pageB to use the same name as pageA
     await pageB.evaluate((forcedName) => {
-      const provider = (window as any).__yProvider;
+      const provider = window.__yProvider;
       if (!provider) return;
       const localState = provider.awareness.getLocalState();
       if (localState?.user) {
@@ -187,14 +177,15 @@ test.describe('US6: Identity collision resolution', () => {
       }
     }, nameA);
 
-    // Wait for collision guard to resolve
-    await pageA.waitForTimeout(1500);
-    await pageB.waitForTimeout(1500);
+    // Poll until the collision guard resolves and names diverge
+    await expect.poll(async () => {
+      const a = await pageA.locator('#user-label').textContent();
+      const b = await pageB.locator('#user-label').textContent();
+      return a !== b;
+    }, { timeout: 10_000 }).toBe(true);
 
     const finalNameA = await pageA.locator('#user-label').textContent();
     const finalNameB = await pageB.locator('#user-label').textContent();
-
-    expect(finalNameA).not.toBe(finalNameB);
     expect(SHADE_NAMES).toContain(finalNameA);
     expect(SHADE_NAMES).toContain(finalNameB);
 
@@ -215,7 +206,7 @@ test.describe('US7: Disconnect and reconnect', () => {
 
     // Disconnect page B by closing its raw WebSocket
     await pageB.evaluate(() => {
-      const provider = (window as any).__yProvider;
+      const provider = window.__yProvider!;
       provider.shouldConnect = false;
       provider.ws?.close();
     });
@@ -228,7 +219,7 @@ test.describe('US7: Disconnect and reconnect', () => {
 
     // Reconnect page B by re-enabling auto-connect
     await pageB.evaluate(() => {
-      const provider = (window as any).__yProvider;
+      const provider = window.__yProvider!;
       provider.shouldConnect = true;
       provider.connect();
     });

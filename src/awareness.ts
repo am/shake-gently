@@ -76,11 +76,14 @@ export function setupCollisionGuard(
 
     if (dominated) {
       resolving = true;
-      const newShade = pickAvailable(awareness);
-      const identity = shadeToIdentity(newShade);
-      awareness.setLocalStateField('user', identity);
-      onReassign(identity);
-      resolving = false;
+      try {
+        const newShade = pickAvailable(awareness);
+        const identity = shadeToIdentity(newShade);
+        awareness.setLocalStateField('user', identity);
+        onReassign(identity);
+      } finally {
+        resolving = false;
+      }
     }
   });
 }

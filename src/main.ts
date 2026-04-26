@@ -1,9 +1,15 @@
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { createEditor } from './editor';
-import { createUserIdentity, setupCollisionGuard } from './awareness';
+import { createUserIdentity, setupCollisionGuard, type UserIdentity } from './awareness';
 import { setupColorWriter, recolorOwnText } from './colors';
 import './style.css';
+
+declare global {
+  interface Window {
+    __yProvider?: WebsocketProvider;
+  }
+}
 
 const doc = new Y.Doc();
 const ytext = doc.getText('codemirror');
@@ -26,7 +32,7 @@ const presenceEl = document.getElementById('presence')!;
 let user = createUserIdentity(provider.awareness);
 provider.awareness.setLocalStateField('user', user);
 
-function applyIdentity(identity: typeof user) {
+function applyIdentity(identity: UserIdentity) {
   user = identity;
   editorContainer.style.setProperty('--cursor-color', user.color);
   editorContainer.style.setProperty('--cursor-glow', user.colorLight);
@@ -78,4 +84,4 @@ function renderPresence() {
 provider.awareness.on('change', renderPresence);
 renderPresence();
 
-(window as any).__yProvider = provider;
+window.__yProvider = provider;

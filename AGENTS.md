@@ -52,7 +52,7 @@ The main agent acts as **orchestrator and reviewer**, not implementer:
 - Readability over cleverness. A new contributor should understand any module in under 5 minutes.
 - No unnecessary abstractions. Don't extract a helper until it's used in two places.
 - Preserve the flat module structure. New functionality should fit an existing module or justify a single new one.
-- TypeScript strict mode. No `any` unless interfacing with an untyped library boundary.
+- Strong TypeScript checks (`noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`). No `any` unless interfacing with an untyped library boundary.
 - CSS lives in `src/style.css`. No CSS-in-JS.
 
 ### 4. Keep README.md up-to-date

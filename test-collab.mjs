@@ -13,7 +13,6 @@
 
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
-import * as awarenessProtocol from 'y-protocols/awareness';
 
 const WS_URL = 'ws://localhost:1234';
 const ROOM = 'test-room-' + Date.now();
