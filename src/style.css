@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family: 'DM Sans', sans-serif;
   background: #050505;
   color: #ddd;
   min-height: 100vh;
@@ -126,7 +126,7 @@ main {
 
 /* ── neon text ── */
 #editor .cm-content {
-  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family: 'Major Mono Display', monospace;
   font-weight: 700;
   font-size: 24px;
   line-height: 1.5;
@@ -180,7 +180,7 @@ main {
 .cm-ySelectionCaret {
   display: inline-block !important;
   border: none !important;
-  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-family: 'Major Mono Display', monospace;
   font-weight: 700;
   font-size: 24px;
   width: 1ch !important;
@@ -201,8 +201,8 @@ main {
 
 #editor .cm-ySelectionInfo {
   position: absolute;
-  top: -1.95em;
-  left: 7px;
+  top: -1.5em;
+  left: 0;
   white-space: nowrap;
   pointer-events: none;
   font-family: sans-serif;
@@ -217,7 +217,7 @@ main {
   user-select: none;
   z-index: 101;
   opacity: 0;
-  transition: opacity .3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
   transition-delay: 0s;
 }
 
