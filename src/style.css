@@ -6,100 +6,114 @@
   padding: 0;
 }
 
-:root {
-  --bg: #1a1b26;
-  --surface: #24283b;
-  --border: #3b4261;
-  --text: #c0caf5;
-  --text-muted: #565f89;
-  --accent: #7aa2f7;
-}
-
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  background: #050505;
+  color: #ddd;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 #app {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
 }
 
-header {
+/* ── top chrome ── */
+.chrome {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-header h1 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--accent);
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-badge {
-  font-size: 13px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--user-color, var(--accent)) 20%, transparent);
-  color: var(--user-color, var(--accent));
+  padding: 18px 0 14px;
 }
 
 .status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-muted);
+  gap: 7px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  transition: background-color 300ms;
+  transition:
+    background-color 400ms,
+    box-shadow 400ms;
 }
 
 .status-dot.connected {
-  background: #9ece6a;
+  background: #666;
+  box-shadow: 0 0 6px #6664;
 }
 
 .status-dot.disconnected {
-  background: #f7768e;
+  background: #444;
 }
 
+.user-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--user-color, #888);
+  text-shadow: 0 0 12px var(--user-glow, #8884);
+}
+
+/* ── glass surface ── */
 main {
   flex: 1;
-  padding: 20px 0;
   min-height: 0;
+  padding: 0 0 16px;
+}
+
+#editor-wrap {
+  position: relative;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* noise layer */
+#editor-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  filter: url(#noise);
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* glass border glow */
+#editor-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  z-index: 2;
 }
 
 #editor {
   height: 100%;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
 }
 
 #editor .cm-editor {
   height: 100%;
+  background: transparent !important;
 }
 
 #editor .cm-editor.cm-focused {
@@ -107,32 +121,137 @@ main {
 }
 
 #editor .cm-scroller {
-  padding: 4px 16px;
+  padding: 24px 32px;
 }
 
-/* Yjs remote cursor styling */
+/* ── neon text ── */
+#editor .cm-content {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: #f0f0f0;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 24px rgba(255, 255, 255, 0.15),
+    0 0 48px rgba(255, 255, 255, 0.05);
+  caret-color: #fff;
+}
+
+#editor .cm-line {
+  padding: 0;
+}
+
+#editor .cm-cursor,
+#editor .cm-cursor-primary,
+#editor .cm-cursor-secondary,
+#editor .cm-dropCursor {
+  border-left: 2px solid #fff !important;
+  border-right: none !important;
+  width: 0 !important;
+  background: transparent !important;
+  margin-left: 0 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+}
+
+#editor .cm-activeLine {
+  background: transparent !important;
+}
+
+#editor .cm-activeLineGutter {
+  background: transparent !important;
+}
+
+#editor .cm-gutters {
+  display: none !important;
+}
+
+/* hide the selection highlight so only the neon glow carries */
+#editor .cm-selectionBackground {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+#editor .cm-focused .cm-selectionBackground {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ── remote cursors ── */
 .cm-ySelectionCaret {
-  border-left: 2px solid;
+  display: inline-block !important;
+  border: none !important;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  font-size: 24px;
+  width: 1ch !important;
+  height: 1.2em;
+  vertical-align: text-bottom;
   margin-left: -1px;
+  margin-right: -1px;
   position: relative;
+  border-radius: 2px;
+  opacity: 0.7;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.cm-ySelectionCaretDot {
+  display: none !important;
 }
 
 .cm-ySelectionInfo {
   position: absolute;
-  top: -1.4em;
-  left: -1px;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
   white-space: nowrap;
   pointer-events: none;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.cm-ySelectionCaret:hover > .cm-ySelectionInfo {
+  opacity: 1;
 }
 
 .cm-yLineSelection {
-  mix-blend-mode: screen;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
+/* ── footer ── */
 footer {
-  padding: 16px 0;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-  border-top: 1px solid var(--border);
+  padding: 12px 0;
+}
+
+#presence {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.presence-user {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.presence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  flex-shrink: 0;
 }

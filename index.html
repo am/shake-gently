@@ -4,24 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>multinput</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <svg style="position:absolute;width:0;height:0">
+      <filter id="noise">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch"/>
+        <feColorMatrix type="saturate" values="0"/>
+      </filter>
+    </svg>
+
     <div id="app">
-      <header>
-        <h1>multinput</h1>
-        <div class="header-right">
-          <span id="user-label" class="user-badge"></span>
-          <div class="status">
-            <span id="status-dot" class="status-dot disconnected"></span>
-            <span id="status-text">Connecting...</span>
-          </div>
+      <div class="chrome">
+        <div class="status">
+          <span id="status-dot" class="status-dot disconnected"></span>
+          <span id="status-text">Connecting...</span>
         </div>
-      </header>
+        <span id="user-label" class="user-badge"></span>
+      </div>
       <main>
-        <div id="editor"></div>
+        <div id="editor-wrap">
+          <div id="editor"></div>
+        </div>
       </main>
       <footer>
-        <p>Open this page in multiple tabs to collaborate in real time.</p>
+        <div id="presence"></div>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>

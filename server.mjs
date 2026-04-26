@@ -10,7 +10,10 @@ const MSG_AWARENESS = 1;
 
 const PORT = Number(process.env.PORT) || 1234;
 
-/** @type {Map<string, { doc: Y.Doc, awareness: awarenessProtocol.Awareness, conns: Set<import('ws').WebSocket> }>} */
+/**
+ * @typedef {{ doc: Y.Doc, awareness: awarenessProtocol.Awareness, conns: Map<import('ws').WebSocket, Set<number>> }} Room
+ * @type {Map<string, Room>}
+ */
 const rooms = new Map();
 
 function getRoom(name) {
@@ -20,17 +23,35 @@ function getRoom(name) {
   const doc = new Y.Doc();
   const awareness = new awarenessProtocol.Awareness(doc);
   awareness.setLocalState(null);
-  room = { doc, awareness, conns: new Set() };
+
+  room = { doc, awareness, conns: new Map() };
+
+  awareness.on('update', (/** @type {{ added: number[], updated: number[], removed: number[] }} */ changes, origin) => {
+    const changedClients = changes.added.concat(changes.updated).concat(changes.removed);
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, MSG_AWARENESS);
+    encoding.writeVarUint8Array(
+      encoder,
+      awarenessProtocol.encodeAwarenessUpdate(awareness, changedClients),
+    );
+    const buf = encoding.toUint8Array(encoder);
+
+    room.conns.forEach((_, ws) => {
+      if (ws !== origin && ws.readyState === 1) {
+        ws.send(buf);
+      }
+    });
+
+    // Track which clientIDs belong to which connection
+    if (origin instanceof Object && room.conns.has(origin)) {
+      const ids = room.conns.get(origin);
+      for (const id of changes.added) ids.add(id);
+      for (const id of changes.updated) ids.add(id);
+    }
+  });
+
   rooms.set(name, room);
   return room;
-}
-
-function broadcastBuf(room, buf, exclude) {
-  for (const ws of room.conns) {
-    if (ws !== exclude && ws.readyState === 1) {
-      ws.send(buf);
-    }
-  }
 }
 
 const wss = new WebSocketServer({ port: PORT });
@@ -38,7 +59,7 @@ const wss = new WebSocketServer({ port: PORT });
 wss.on('connection', (ws, req) => {
   const roomName = new URL(req.url, 'http://localhost').pathname.slice(1) || 'default';
   const room = getRoom(roomName);
-  room.conns.add(ws);
+  room.conns.set(ws, new Set());
 
   // Send sync step 1
   {
@@ -50,14 +71,16 @@ wss.on('connection', (ws, req) => {
 
   // Send current awareness states
   {
-    const states = awarenessProtocol.encodeAwarenessUpdate(
-      room.awareness,
-      Array.from(room.awareness.getStates().keys()),
-    );
-    const encoder = encoding.createEncoder();
-    encoding.writeVarUint(encoder, MSG_AWARENESS);
-    encoding.writeVarUint8Array(encoder, states);
-    ws.send(encoding.toUint8Array(encoder));
+    const states = room.awareness.getStates();
+    if (states.size > 0) {
+      const encoder = encoding.createEncoder();
+      encoding.writeVarUint(encoder, MSG_AWARENESS);
+      encoding.writeVarUint8Array(
+        encoder,
+        awarenessProtocol.encodeAwarenessUpdate(room.awareness, Array.from(states.keys())),
+      );
+      ws.send(encoding.toUint8Array(encoder));
+    }
   }
 
   ws.on('message', (data) => {
@@ -74,21 +97,31 @@ wss.on('connection', (ws, req) => {
         if (encoding.length(encoder) > 1) {
           ws.send(reply);
         }
-        // Broadcast the original message to other clients
-        broadcastBuf(room, buf, ws);
+        room.conns.forEach((_, peer) => {
+          if (peer !== ws && peer.readyState === 1) peer.send(buf);
+        });
         break;
       }
       case MSG_AWARENESS: {
         const update = decoding.readVarUint8Array(decoder);
         awarenessProtocol.applyAwarenessUpdate(room.awareness, update, ws);
-        broadcastBuf(room, buf, ws);
         break;
       }
     }
   });
 
   ws.on('close', () => {
+    const clientIds = room.conns.get(ws);
     room.conns.delete(ws);
+
+    if (clientIds && clientIds.size > 0) {
+      awarenessProtocol.removeAwarenessStates(
+        room.awareness,
+        Array.from(clientIds),
+        null,
+      );
+    }
+
     if (room.conns.size === 0) {
       room.awareness.destroy();
       room.doc.destroy();
