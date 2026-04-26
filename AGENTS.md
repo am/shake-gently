@@ -1,4 +1,4 @@
-# multinput — Agent Guidelines
+# Shake gently — Agent Guidelines
 
 ## Project
 

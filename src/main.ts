@@ -12,7 +12,7 @@ const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:1234';
 
 const provider = new WebsocketProvider(
   wsUrl,
-  'multinput-room',
+  'shake-gently-room',
   doc,
   { disableBc: true },
 );
@@ -46,7 +46,7 @@ provider.on('status', ({ status }: { status: string }) => {
   updateStatus(status === 'connected');
 });
 
-const view = createEditor(editorContainer, ytext, provider.awareness);
+createEditor(editorContainer, ytext, provider.awareness);
 setupColorWriter(ytext, () => user.color, doc.clientID);
 
 setupCollisionGuard(provider.awareness, (newIdentity) => {

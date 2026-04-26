@@ -1,8 +1,38 @@
-# multinput
+# Shake gently
 
 A collaborative text editor where every user's keystrokes glow in a different color. Multiple browsers connect to a shared document over WebSockets; each participant is assigned a unique neon shade, and their text lights up accordingly in real time.
 
 Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a minimal Node WebSocket relay. The UI is dark-on-black with a glassmorphism editor surface, neon text rendering, and live presence indicators.
+
+## Name
+
+The name comes from Tristan Tzara's Dadaist instruction poem:
+
+> Tristan Tzara
+>
+> (1896-1963)
+>
+> To Make A Dadaist Poem
+>
+> Take a newspaper.
+>
+> Take some scissors.
+>
+> Choose from this paper an article the length you want to make your poem.
+>
+> Cut out the article.
+>
+> Next carefully cut out each of the words that make up this article and put them all in a bag.
+>
+> Shake gently.
+>
+> Next take out each cutting one after the other.
+>
+> Copy conscientiously in the order in which they left the bag.
+>
+> The poem will resemble you.
+>
+> And there you are–an infinitely original author of charming sensibility, even though unappreciated by the vulgar herd.
 
 ## What it does
 

@@ -39,6 +39,7 @@ test.describe('US1: Solo user opens the app', () => {
   test('status shows live, badge has a known shade name, presence shows self, editor renders', async ({ browser }) => {
     const page = await openApp(browser);
 
+    await expect(page).toHaveTitle('Shake gently');
     await expect(page.locator('#status-text')).toHaveText('live');
     await expect(page.locator('.status-dot')).toHaveClass(/connected/);
 
