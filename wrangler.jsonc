@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "shake-gently",
+  "account_id": "340531e1c68664df1ef003f96e94cacf",
   "main": "src/worker.ts",
   "compatibility_date": "2026-04-26",
   "compatibility_flags": ["nodejs_compat"],
