@@ -43,10 +43,8 @@ provider.awareness.setLocalStateField('user', user);
 function applyIdentity(identity: UserIdentity) {
   user = identity;
   editorContainer.style.setProperty('--cursor-color', user.color);
-  editorContainer.style.setProperty('--cursor-glow', user.colorLight);
   userLabel.textContent = user.name;
   userLabel.style.setProperty('--user-color', user.color);
-  userLabel.style.setProperty('--user-glow', user.colorLight);
 }
 
 applyIdentity(user);
@@ -94,7 +92,6 @@ function renderPresence() {
     const dot = document.createElement('span');
     dot.className = 'presence-dot';
     dot.style.background = u.color;
-    dot.style.boxShadow = `0 0 6px ${u.colorLight}`;
     const name = document.createElement('span');
     name.textContent = u.name;
     name.style.color = u.color;

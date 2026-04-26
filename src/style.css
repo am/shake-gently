@@ -45,14 +45,11 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  transition:
-    background-color 400ms,
-    box-shadow 400ms;
+  transition: background-color 400ms;
 }
 
 .status-dot.connected {
   background: #666;
-  box-shadow: 0 0 6px #6664;
 }
 
 .status-dot.disconnected {
@@ -65,7 +62,6 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--user-color, #888);
-  text-shadow: 0 0 12px var(--user-glow, #8884);
 }
 
 /* ── glass surface ── */
@@ -97,7 +93,6 @@ main {
   z-index: 1;
 }
 
-/* glass border glow */
 #editor-wrap::after {
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -124,17 +119,12 @@ main {
   padding: 24px 32px;
 }
 
-/* ── neon text ── */
 #editor .cm-content {
-  font-family: 'Major Mono Display', monospace;
+  font-family: 'Geist Mono', monospace;
   font-weight: 700;
   font-size: 24px;
   line-height: 1.5;
   color: #f0f0f0;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.5),
-    0 0 24px rgba(255, 255, 255, 0.15),
-    0 0 48px rgba(255, 255, 255, 0.05);
   caret-color: #fff;
 }
 
@@ -149,7 +139,6 @@ main {
   width: 0 !important;
   background: transparent !important;
   margin-left: 0 !important;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
 }
 
 #editor .cm-activeLine {
@@ -160,7 +149,6 @@ main {
   display: none !important;
 }
 
-/* hide the selection highlight so only the neon glow carries */
 #editor .cm-selectionBackground {
   background: rgba(255, 255, 255, 0.08) !important;
 }
@@ -173,7 +161,7 @@ main {
 .cm-ySelectionCaret {
   display: inline-block !important;
   border: none !important;
-  font-family: 'Major Mono Display', monospace;
+  font-family: 'Geist Mono', monospace;
   font-weight: 700;
   font-size: 24px;
   width: 1ch !important;

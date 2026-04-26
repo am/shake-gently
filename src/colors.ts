@@ -11,10 +11,6 @@ import type { Text as YText } from 'yjs';
 
 const COLOR_ORIGIN = 'color-format';
 
-function glowFor(hex: string): string {
-  return `0 0 8px ${hex}80, 0 0 20px ${hex}30`;
-}
-
 function buildDecorations(ytext: YText): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const delta = ytext.toDelta();
@@ -29,7 +25,7 @@ function buildDecorations(ytext: YText): DecorationSet {
           pos + len,
           Decoration.mark({
             attributes: {
-              style: `color: ${color}; text-shadow: ${glowFor(color)};`,
+              style: `color: ${color};`,
             },
           }),
         );

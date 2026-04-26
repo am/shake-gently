@@ -59,6 +59,10 @@ const wss = new WebSocketServer({ port: PORT });
 wss.on('connection', (ws, req) => {
   const roomName = new URL(req.url, 'http://localhost').pathname.slice(1) || 'default';
   const room = getRoom(roomName);
+  if (room._destroyTimer) {
+    clearTimeout(room._destroyTimer);
+    room._destroyTimer = null;
+  }
   room.conns.set(ws, new Set());
 
   // Send sync step 1
@@ -123,9 +127,14 @@ wss.on('connection', (ws, req) => {
     }
 
     if (room.conns.size === 0) {
-      room.awareness.destroy();
-      room.doc.destroy();
-      rooms.delete(roomName);
+      const GRACE_MS = 5000;
+      room._destroyTimer = setTimeout(() => {
+        if (room.conns.size === 0) {
+          room.awareness.destroy();
+          room.doc.destroy();
+          rooms.delete(roomName);
+        }
+      }, GRACE_MS);
     }
   });
 });
