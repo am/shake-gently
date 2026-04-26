@@ -1,0 +1,27 @@
+{
+  "name": "multinput",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server.mjs",
+    "start": "node server.mjs & vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10"
+  },
+  "dependencies": {
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.41.1",
+    "codemirror": "^6.0.2",
+    "ws": "^8.20.0",
+    "y-codemirror.next": "^0.3.5",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.30"
+  }
+}

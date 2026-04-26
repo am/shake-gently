@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>multinput</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>multinput</h1>
+        <div class="header-right">
+          <span id="user-label" class="user-badge"></span>
+          <div class="status">
+            <span id="status-dot" class="status-dot disconnected"></span>
+            <span id="status-text">Connecting...</span>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div id="editor"></div>
+      </main>
+      <footer>
+        <p>Open this page in multiple tabs to collaborate in real time.</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

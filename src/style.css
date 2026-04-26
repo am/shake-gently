@@ -1,0 +1,138 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #1a1b26;
+  --surface: #24283b;
+  --border: #3b4261;
+  --text: #c0caf5;
+  --text-muted: #565f89;
+  --accent: #7aa2f7;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-badge {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--user-color, var(--accent)) 20%, transparent);
+  color: var(--user-color, var(--accent));
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background-color 300ms;
+}
+
+.status-dot.connected {
+  background: #9ece6a;
+}
+
+.status-dot.disconnected {
+  background: #f7768e;
+}
+
+main {
+  flex: 1;
+  padding: 20px 0;
+  min-height: 0;
+}
+
+#editor {
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+#editor .cm-editor {
+  height: 100%;
+}
+
+#editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+#editor .cm-scroller {
+  padding: 4px 16px;
+}
+
+/* Yjs remote cursor styling */
+.cm-ySelectionCaret {
+  border-left: 2px solid;
+  margin-left: -1px;
+  position: relative;
+}
+
+.cm-ySelectionInfo {
+  position: absolute;
+  top: -1.4em;
+  left: -1px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.cm-yLineSelection {
+  mix-blend-mode: screen;
+}
+
+footer {
+  padding: 16px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+}
