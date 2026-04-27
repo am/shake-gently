@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import type { WebSocketServer } from 'ws';
-import { startIsolatedServer, stopServer } from './helpers/ws-server';
+import { startIsolatedServer, type TestServer } from './helpers/ws-server';
 import { TEST_WS_PORT, APP_URL } from './helpers/constants';
 
 // SVG feTurbulence noise + font sub-pixel rendering create ~1-2% pixel
@@ -8,14 +7,14 @@ import { TEST_WS_PORT, APP_URL } from './helpers/constants';
 // but well below any meaningful style change.
 const VISUAL_TOLERANCE = 0.02;
 
-let wss: WebSocketServer;
+let server: TestServer;
 
 test.beforeAll(async () => {
-  wss = await startIsolatedServer(TEST_WS_PORT);
+  server = await startIsolatedServer(TEST_WS_PORT);
 });
 
 test.afterAll(async () => {
-  await stopServer(wss);
+  await server.close();
 });
 
 test.describe('CSS visual regression', () => {
@@ -88,6 +87,8 @@ test.describe('CSS visual regression', () => {
         'main', '#editor-wrap', '#editor',
         '#editor .cm-editor', '#editor .cm-scroller',
         '#editor .cm-content', 'footer', '#presence',
+        '#timeline', '.timeline-slider', '.timeline-meta',
+        '.timeline-label', '.timeline-live',
       ];
 
       const snapshot: Record<string, Record<string, string> | null> = {};

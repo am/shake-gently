@@ -1,19 +1,18 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
-import type { WebSocketServer } from 'ws';
-import { startIsolatedServer, stopServer } from './helpers/ws-server';
+import { startIsolatedServer, type TestServer } from './helpers/ws-server';
 import { TEST_WS_PORT, APP_URL } from './helpers/constants';
 import { SHADES } from '../src/awareness';
 
 const SHADE_NAMES = SHADES.map((s) => s.name);
 
-let wss: WebSocketServer;
+let server: TestServer;
 
 test.beforeAll(async () => {
-  wss = await startIsolatedServer(TEST_WS_PORT);
+  server = await startIsolatedServer(TEST_WS_PORT);
 });
 
 test.afterAll(async () => {
-  await stopServer(wss);
+  await server.close();
 });
 
 async function openApp(browser: Browser): Promise<Page> {
