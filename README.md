@@ -16,7 +16,7 @@
 
 A collaborative text editor where every user's can write using it's own color. Multiple users can connect to a shared document over WebSockets; each participant is assigned a unique color shade, and their text is shared in real time.
 
-Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a Cloudflare Worker with a Durable Object as the y-websocket relay. The UI is dark-on-black with a glassmorphism editor surface and live presence indicators.
+Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a Cloudflare Worker with a Durable Object as the y-websocket relay. Document state is persisted to Durable Object SQLite so it survives restarts. The UI is dark-on-black with a glassmorphism editor surface, live presence indicators, and a history timeline.
 
 ## What it does
 
@@ -24,13 +24,15 @@ Built on Yjs for conflict-free replicated data, CodeMirror 6 for editing, and a 
 - **Per-user colored text** -- each participant is assigned a named shade (Moonstone, Ghost Orchid, Pale Flame, etc.). Text they type is permanently colored in that shade.
 - **Presence awareness** -- a footer bar shows every connected user with their color. Remote cursors are visible inline in the editor.
 - **Collision resolution** -- if two users end up with the same shade (e.g. due to a race), the higher-numbered client automatically re-rolls and recolors its existing text.
+- **Persistent state** -- the document is saved to Durable Object SQLite. State survives when all users disconnect or the DO isolate is evicted.
+- **History timeline** -- a scrollable timeline bar above the editor shows snapshots of the document over time. Click any dot to preview that version in a read-only overlay; click "back to live" to return. Snapshots are created conservatively: after 5 seconds of editing quiescence, every 60 seconds during sustained activity, and when the last user disconnects.
 
 ## Architecture
 
 The project is a flat set of four client-side TypeScript modules, a Cloudflare Worker backend, and a single CSS file.
 
 ```
-index.html          HTML shell (editor mount, status bar, presence footer)
+index.html          HTML shell (editor mount, status bar, timeline, presence footer)
 wrangler.jsonc      Cloudflare Worker, assets, and Durable Object config
 test-cf-config.mjs  Cloudflare deployment invariant test
 src/
@@ -38,10 +40,11 @@ src/
   editor.ts         CodeMirror 6 setup (theme, extensions, yCollab binding)
   awareness.ts      User identity: shade selection, name-collision resolution
   colors.ts         Y.Text formatting on insert + CodeMirror mark decorations
-  worker.ts         Cloudflare Worker + Durable Object y-websocket relay
+  history.ts        History timeline UI, snapshot fetching, read-only preview overlay
+  worker.ts         Cloudflare Worker + Durable Object: WS relay, SQLite persistence, history API
   worker-configuration.d.ts
                     Generated Wrangler runtime and binding types
-  style.css         All styling (glassmorphism surface, cursors, presence)
+  style.css         All styling (glassmorphism surface, cursors, timeline, presence)
 tests/
   helpers/
     ws-server.ts         In-process WS server for Playwright tests
@@ -62,15 +65,24 @@ sequenceDiagram
     A->>A: color-format observer → Y.Text.format({ color, author })
     A->>S: WebsocketProvider (ws)
     Note over S: Cloudflare Durable Object (wrangler dev locally)
+    S->>S: scheduleSave() (5 s debounce)
     S->>B: WebsocketProvider (ws)
     B->>B: Y.Doc remote apply
     B->>B: ColorDecorationsPlugin rebuilds DecorationSet
     B->>B: CodeMirror renders colored text
 
+    Note over S: After 5 s idle
+    S->>S: save() → SQLite (doc_state + snapshots)
+
     B->>B: CodeMirror edit
     B->>S: WebsocketProvider (ws)
     S->>A: WebsocketProvider (ws)
     A->>A: Y.Doc remote apply → render
+
+    Note over A: History timeline
+    A->>S: GET /room/history (HTTP)
+    S->>A: JSON snapshot metadata
+    A->>A: render timeline dots
 ```
 
 ### Module dependencies
@@ -81,9 +93,12 @@ graph TD
     main --> editor[editor.ts]
     main --> awareness[awareness.ts]
     main --> colors[colors.ts]
+    main --> history[history.ts]
     editor --> colors
     main --> provider[y-websocket Provider]
     provider <-->|ws| worker[worker.ts / Durable Object]
+    history -->|HTTP| worker
+    worker --> sqlite[(SQLite: doc_state, snapshots)]
     main --> ydoc[Y.Doc / Y.Text]
     editor --> cm[CodeMirror 6]
     editor --> ycollab[y-codemirror.next]
@@ -99,7 +114,9 @@ graph TD
    - **Write side** (`setupColorWriter`): observes local `Y.Text` inserts and applies a `format()` call tagging each range with `{ color, author }`.
    - **Read side** (`colorDecorations`): a CodeMirror `ViewPlugin` that walks the Yjs delta, converts color attributes into inline `style` decorations, and rebuilds on every change.
 
-5. **`worker.ts`** provides the backend. The Worker routes each WebSocket room path to `ROOMS.getByName(roomName)`, and each Durable Object keeps its own in-memory `Y.Doc`, `Awareness`, and connected peers while the room is active. Locally, `wrangler dev` runs the same Worker via Miniflare.
+5. **`history.ts`** fetches snapshot metadata from the history HTTP API and renders a timeline bar above the editor. Clicking a dot loads that snapshot into a temporary `Y.Doc` and displays it as a read-only overlay. "Back to live" dismisses the preview.
+
+6. **`worker.ts`** provides the backend. The Worker routes each WebSocket room path to `ROOMS.getByName(roomName)`, and each Durable Object keeps its own `Y.Doc`, `Awareness`, and connected peers. Document state is persisted to SQLite on a 5-second debounce after edits, every 60 seconds during sustained activity, and when the last user disconnects. The DO also serves history HTTP endpoints (`/history`, `/history/:id`) for the timeline UI. On startup, the DO loads the last saved state from SQLite, so documents survive DO eviction. Locally, `wrangler dev` runs the same Worker via Miniflare.
 
 ### Key libraries
 

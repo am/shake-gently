@@ -24,8 +24,35 @@ export class RoomDurableObject extends DurableObject<Env> {
   private readonly awareness = new awarenessProtocol.Awareness(this.doc);
   private readonly clientIds = new Map<WebSocket, Set<number>>();
 
+  private saveTimeout: ReturnType<typeof setTimeout> | null = null;
+  private periodicInterval: ReturnType<typeof setInterval> | null = null;
+  private lastSavedStateVector: Uint8Array | null = null;
+  private dirty = false;
+
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
+
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS doc_state (
+        id     INTEGER PRIMARY KEY DEFAULT 1,
+        data   BLOB NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS snapshots (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+        user_name  TEXT,
+        user_color TEXT,
+        preview    TEXT,
+        data       BLOB   NOT NULL
+      );
+    `);
+
+    const rows = this.ctx.storage.sql.exec("SELECT data FROM doc_state WHERE id = 1").toArray();
+    if (rows.length > 0) {
+      Y.applyUpdate(this.doc, new Uint8Array(rows[0].data as ArrayBuffer));
+      this.lastSavedStateVector = Y.encodeStateVector(this.doc);
+    }
+
     this.awareness.setLocalState(null);
     this.awareness.on('update', (changes: AwarenessChanges, origin: unknown) => {
       this.broadcastAwareness(changes, origin);
@@ -33,7 +60,45 @@ export class RoomDurableObject extends DurableObject<Env> {
   }
 
   fetch(request: Request): Response {
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+
     if (request.headers.get('Upgrade') !== 'websocket') {
+      const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      };
+
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders });
+      }
+
+      if (pathname.endsWith('/history')) {
+        const before = url.searchParams.get('before');
+        const rows = this.ctx.storage.sql
+          .exec(
+            "SELECT id, created_at, user_name, user_color, preview FROM snapshots WHERE (?1 IS NULL OR id < ?1) ORDER BY id DESC LIMIT 50",
+            before ? Number(before) : null,
+          )
+          .toArray();
+        return new Response(JSON.stringify(rows), {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      const snapshotMatch = pathname.match(/\/history\/(\d+)$/);
+      if (snapshotMatch) {
+        const row = this.ctx.storage.sql
+          .exec("SELECT data FROM snapshots WHERE id = ?", Number(snapshotMatch[1]))
+          .one();
+        if (!row) {
+          return new Response('Not found', { status: 404 });
+        }
+        return new Response(row.data as ArrayBuffer, {
+          headers: { 'Content-Type': 'application/octet-stream', ...corsHeaders },
+        });
+      }
+
       return new Response('Expected WebSocket upgrade', { status: 426 });
     }
 
@@ -64,6 +129,7 @@ export class RoomDurableObject extends DurableObject<Env> {
           socket.send(encoding.toUint8Array(encoder));
         }
         this.broadcast(message, socket);
+        this.scheduleSave();
         break;
       }
       case MSG_AWARENESS: {
@@ -149,6 +215,81 @@ export class RoomDurableObject extends DurableObject<Env> {
         null,
       );
     }
+
+    if (this.ctx.getWebSockets().length === 0) {
+      this.stopTimers();
+      this.save();
+    }
+  }
+
+  private save() {
+    const update = Y.encodeStateAsUpdate(this.doc);
+    const currentVector = Y.encodeStateVector(this.doc);
+
+    if (
+      this.lastSavedStateVector &&
+      currentVector.length === this.lastSavedStateVector.length &&
+      currentVector.every((v, i) => v === this.lastSavedStateVector![i])
+    ) {
+      this.dirty = false;
+      return;
+    }
+
+    const preview = this.doc.getText('codemirror').toString().slice(0, 100);
+
+    let userName: string | null = null;
+    let userColor: string | null = null;
+    for (const state of this.awareness.getStates().values()) {
+      if (state.user) {
+        userName = state.user.name ?? null;
+        userColor = state.user.color ?? null;
+        break;
+      }
+    }
+
+    this.ctx.storage.sql.exec(
+      "INSERT OR REPLACE INTO doc_state (id, data) VALUES (1, ?)",
+      update,
+    );
+    this.ctx.storage.sql.exec(
+      "INSERT INTO snapshots (user_name, user_color, preview, data) VALUES (?, ?, ?, ?)",
+      userName,
+      userColor,
+      preview,
+      update,
+    );
+
+    this.lastSavedStateVector = currentVector;
+    this.dirty = false;
+  }
+
+  private scheduleSave() {
+    this.dirty = true;
+
+    if (this.saveTimeout !== null) {
+      clearTimeout(this.saveTimeout);
+    }
+    this.saveTimeout = setTimeout(() => {
+      this.saveTimeout = null;
+      this.save();
+    }, 5000);
+
+    if (this.periodicInterval === null) {
+      this.periodicInterval = setInterval(() => {
+        if (this.dirty) this.save();
+      }, 60_000);
+    }
+  }
+
+  private stopTimers() {
+    if (this.saveTimeout !== null) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+    if (this.periodicInterval !== null) {
+      clearInterval(this.periodicInterval);
+      this.periodicInterval = null;
+    }
   }
 }
 
@@ -160,12 +301,19 @@ function roomNameFromPath(pathname: string): string {
 export default {
   fetch(request: Request, env: Env): Response | Promise<Response> {
     const url = new URL(request.url);
-    const roomName = roomNameFromPath(url.pathname);
+    const pathname = url.pathname;
 
-    if (request.headers.get('Upgrade') !== 'websocket') {
+    const isWebSocket = request.headers.get('Upgrade') === 'websocket';
+    const isHistory = /\/history(\/\d+)?$/.test(pathname);
+
+    if (!isWebSocket && !isHistory) {
       return env.ASSETS.fetch(request);
     }
 
+    const roomPath = isHistory
+      ? pathname.replace(/\/history(\/\d+)?$/, '') || '/'
+      : pathname;
+    const roomName = roomNameFromPath(roomPath);
     const room = env.ROOMS.getByName(roomName);
     return room.fetch(request);
   },

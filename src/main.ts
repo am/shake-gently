@@ -3,6 +3,7 @@ import { WebsocketProvider } from 'y-websocket';
 import { createEditor } from './editor';
 import { createUserIdentity, setupCollisionGuard, type UserIdentity } from './awareness';
 import { setupColorWriter, recolorOwnText } from './colors';
+import { setupHistory } from './history';
 import './style.css';
 
 declare global {
@@ -103,5 +104,8 @@ function renderPresence() {
 
 provider.awareness.on('change', renderPresence);
 renderPresence();
+
+const timelineEl = document.getElementById('timeline')!;
+setupHistory(timelineEl, doc, provider, document.getElementById('editor-wrap')!);
 
 window.__yProvider = provider;
